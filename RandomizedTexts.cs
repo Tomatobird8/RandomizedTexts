@@ -26,6 +26,8 @@ namespace RandomizedTexts
         public static float gameOverFontSize = 80f;
         public static List<string> gameOverSubtitles = [];
         public static float gameOverSubtitleFontSize = 23f;
+        public static List<string> loadingTextMessages = [];
+        public static float loadingTextFontSize = 35f;
 
         private void Awake()
         {
@@ -45,6 +47,8 @@ namespace RandomizedTexts
             gameOverFontSize = Config.Bind<float>("General", "GameOverFontSize", 80f, "Set text font size here.").Value;
             gameOverSubtitles = StringToList(Config.Bind<string>("General", "GameOverSubtitleMessages", "", "Add texts to display here. Separate messages using the | symbol.").Value);
             gameOverSubtitleFontSize = Config.Bind<float>("General", "GameOverSubtitleFontSize", 23f, "Set text font size here.").Value;
+            loadingTextMessages = StringToList(Config.Bind<string>("General", "LoadingTextMessages", "", "Add texts to display here. Separate messages using the | symbol.").Value);
+            loadingTextFontSize = Config.Bind<float>("General", "LoadingTextFontSize", 35f, "Set text font size here.").Value;
 
             Patch();
 
@@ -79,6 +83,11 @@ namespace RandomizedTexts
             {
                 Logger.LogDebug("Patching.... GameOverMessagePatch");
                 Harmony.PatchAll(typeof(GameOverMessagePatch));
+            }
+            if (loadingTextMessages.Count > 0)
+            {
+                Logger.LogDebug("Patching.... LoadingLevelPatch");
+                Harmony.PatchAll(typeof(LoadingLevelPatch));
             }
 
             Logger.LogDebug("Finished patching!");

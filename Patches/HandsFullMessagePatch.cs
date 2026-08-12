@@ -4,34 +4,33 @@ using RandomizedTexts.Extensions;
 using TMPro;
 using UnityEngine;
 
-namespace RandomizedTexts.Patches
+namespace RandomizedTexts.Patches;
+
+internal class HandsFullMessagePatch
 {
-    internal class HandsFullMessagePatch
+    [HarmonyPatch(typeof(PlayerControllerB), nameof(PlayerControllerB.SwitchToItemSlot))]
+    [HarmonyPostfix]
+    private static void SwitchToItemSlotPostFix(PlayerControllerB __instance)
     {
-        [HarmonyPatch(typeof(PlayerControllerB), "SwitchToItemSlot")]
-        [HarmonyPostfix]
-        private static void SwitchToItemSlotPostFix(PlayerControllerB __instance)
+        if (__instance.IsOwner && HUDManager.Instance.holdingTwoHandedItem.enabled)
         {
-            if (__instance.IsOwner && HUDManager.Instance.holdingTwoHandedItem.enabled)
+            GameObject handsFullTextObject = GameObject.Find("Systems/UI/Canvas/IngamePlayerHUD/HandsFullText");
+            if (handsFullTextObject != null)
             {
-                string selectedText = "";
-                GameObject handsFullTextObject = GameObject.Find("Systems/UI/Canvas/IngamePlayerHUD/HandsFullText");
-                if (handsFullTextObject != null)
+                TextMeshProUGUI component = handsFullTextObject.GetComponent<TextMeshProUGUI>();
+                string selectedText;
+                if (RandomizedTexts.seedBasedRandom)
                 {
-                    TextMeshProUGUI component = handsFullTextObject.GetComponent<TextMeshProUGUI>();
-                    if (RandomizedTexts.seedBasedRandom)
-                    {
-                        System.Random rand = new(StartOfRound.Instance.randomMapSeed + 38);
-                        selectedText = rand.NextItem(RandomizedTexts.handsFullMessages);
-                    }
-                    else
-                    {
-                        System.Random rand = new();
-                        selectedText = rand.NextItem(RandomizedTexts.handsFullMessages);
-                    }
-                    component.text = selectedText;
-                    component.fontSize = RandomizedTexts.handsFullFontSize;
+                    System.Random rand = new(StartOfRound.Instance.randomMapSeed + 38);
+                    selectedText = rand.NextItem(RandomizedTexts.handsFullMessages);
                 }
+                else
+                {
+                    System.Random rand = new();
+                    selectedText = rand.NextItem(RandomizedTexts.handsFullMessages);
+                }
+                component.text = selectedText;
+                component.fontSize = RandomizedTexts.handsFullFontSize;
             }
         }
     }

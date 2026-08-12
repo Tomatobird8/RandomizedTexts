@@ -4,32 +4,31 @@ using TMPro;
 using UnityEngine;
 using RandomizedTexts.Extensions;
 
-namespace RandomizedTexts.Patches
+namespace RandomizedTexts.Patches;
+
+internal class DeathMessagePatch
 {
-    internal class DeathMessagePatch
+    [HarmonyPatch(typeof(PlayerControllerB), nameof(PlayerControllerB.KillPlayer))]
+    [HarmonyPrefix]
+    private static void KillPlayerPrefix(PlayerControllerB __instance)
     {
-        [HarmonyPatch(typeof(PlayerControllerB), "KillPlayer")]
-        [HarmonyPrefix]
-        private static void KillPlayerPrefix(PlayerControllerB __instance)
+        GameObject deathTextObject = GameObject.Find("Systems/UI/Canvas/DeathScreen/GameOverText");
+        if (deathTextObject != null)
         {
-            string selectedText = "";
-            GameObject deathTextObject = GameObject.Find("Systems/UI/Canvas/DeathScreen/GameOverText");
-            if (deathTextObject != null)
+            TextMeshProUGUI component = deathTextObject.GetComponent<TextMeshProUGUI>();
+            string selectedText;
+            if (RandomizedTexts.seedBasedRandom)
             {
-                TextMeshProUGUI component = deathTextObject.GetComponent<TextMeshProUGUI>();
-                if (RandomizedTexts.seedBasedRandom)
-                {
-                    System.Random rand = new(StartOfRound.Instance.randomMapSeed + 420);
-                    selectedText = rand.NextItem(RandomizedTexts.deathMessages);
-                }
-                else
-                {
-                    System.Random rand = new();
-                    selectedText = rand.NextItem(RandomizedTexts.deathMessages);
-                }
-                component.text = selectedText;
-                component.fontSize = RandomizedTexts.deathFontSize;
+                System.Random rand = new(StartOfRound.Instance.randomMapSeed + 420);
+                selectedText = rand.NextItem(RandomizedTexts.deathMessages);
             }
+            else
+            {
+                System.Random rand = new();
+                selectedText = rand.NextItem(RandomizedTexts.deathMessages);
+            }
+            component.text = selectedText;
+            component.fontSize = RandomizedTexts.deathFontSize;
         }
     }
 }
