@@ -1,8 +1,12 @@
 using BepInEx;
 using BepInEx.Logging;
 using HarmonyLib;
+using RandomizedTexts.Extensions;
 using RandomizedTexts.Patches;
+using System;
 using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
 
 namespace RandomizedTexts
 {
@@ -26,8 +30,10 @@ namespace RandomizedTexts
         public static float gameOverFontSize = 80f;
         public static List<string> gameOverSubtitles = [];
         public static float gameOverSubtitleFontSize = 23f;
-        public static List<string> loadingTextMessages = [];
-        public static float loadingTextFontSize = 35f;
+        public static List<string> landingToMoonMessages = [];
+        public static float landingToMoonFontSize = 35f;
+        public static List<string> loadingMessages = [];
+        public static float loadingFontSize = 19.6f;
 
         private void Awake()
         {
@@ -47,8 +53,10 @@ namespace RandomizedTexts
             gameOverFontSize = Config.Bind<float>("General", "GameOverFontSize", 80f, "Set text font size here.").Value;
             gameOverSubtitles = StringToList(Config.Bind<string>("General", "GameOverSubtitleMessages", "", "Add texts to display here. Separate messages using the | symbol.").Value);
             gameOverSubtitleFontSize = Config.Bind<float>("General", "GameOverSubtitleFontSize", 23f, "Set text font size here.").Value;
-            loadingTextMessages = StringToList(Config.Bind<string>("General", "LoadingTextMessages", "", "Add texts to display here. Separate messages using the | symbol.").Value);
-            loadingTextFontSize = Config.Bind<float>("General", "LoadingTextFontSize", 35f, "Set text font size here.").Value;
+            landingToMoonMessages = StringToList(Config.Bind<string>("General", "EnteringAtmosphereMessages", "", "Add texts to display here. Separate messages using the | symbol.").Value);
+            landingToMoonFontSize = Config.Bind<float>("General", "EnteringAtmosphereFontSize", 35f, "Set text font size here.").Value;
+            loadingMessages = StringToList(Config.Bind<string>("General", "LoadingMessages", "", "Add texts to display here. Separate messages using the | symbol.").Value);
+            loadingFontSize = Config.Bind<float>("General", "LoadingFontSize", 19.6f, "Set text font size here.").Value;
 
             Patch();
 
@@ -59,39 +67,53 @@ namespace RandomizedTexts
         {
             Harmony ??= new Harmony(MyPluginInfo.PLUGIN_GUID);
 
-            if (aliveMessages.Count > 0)
+            static void TryPatchSingle(bool cond, Type patchType)
             {
-                Logger.LogDebug("Patching.... AliveMessagePatch");
-                Harmony.PatchAll(typeof(AliveMessagePatch));
+                if (!cond) return;
+                Logger.LogDebug($"Patching... {patchType.Name}");
+                Harmony?.PatchAll(patchType);
             }
-            if (handsFullMessages.Count > 0)
-            {
-                Logger.LogDebug("Patching.... HandsFullMessagePatch");
-                Harmony.PatchAll(typeof(HandsFullMessagePatch));
-            }
-            if (criticalInjuryMessages.Count > 0)
-            {
-                Logger.LogDebug("Patching.... CriticalInjuryPatch");
-                Harmony.PatchAll(typeof(CriticalInjuryPatch));
-            }
-            if (deathMessages.Count > 0)
-            {
-                Logger.LogDebug("Patching.... DeathMessagePatch");
-                Harmony.PatchAll(typeof(DeathMessagePatch));
-            }
-            if (gameOverMessages.Count > 0 || gameOverSubtitles.Count > 0)
-            {
-                Logger.LogDebug("Patching.... GameOverMessagePatch");
-                Harmony.PatchAll(typeof(GameOverMessagePatch));
-            }
-            if (loadingTextMessages.Count > 0)
-            {
-                Logger.LogDebug("Patching.... LoadingLevelPatch");
-                Harmony.PatchAll(typeof(LoadingLevelPatch));
-            }
+
+            TryPatchSingle(aliveMessages.Count > 0, typeof(AliveMessagePatch));
+            TryPatchSingle(handsFullMessages.Count > 0, typeof(HandsFullMessagePatch));
+            TryPatchSingle(criticalInjuryMessages.Count > 0, typeof(CriticalInjuryPatch));
+            TryPatchSingle(deathMessages.Count > 0, typeof(DeathMessagePatch));
+            TryPatchSingle(gameOverMessages.Count > 0 || gameOverSubtitles.Count > 0, typeof(GameOverMessagePatch));
+            TryPatchSingle(landingToMoonMessages.Count > 0, typeof(LoadingLevelPatch));
+            TryPatchSingle(loadingMessages.Count > 0, typeof(LoadingGamePatch));
 
             Logger.LogDebug("Finished patching!");
         }
+
+        internal static void ChangeText(string path, string name, List<string> stringList, float fontSize, int seed)
+        {
+            GameObject textObject = GameObject.Find(path);
+            if (textObject == null)
+            {
+                Logger.LogWarning($"Couldn't find the {name} text game object.");
+                return;
+            }
+            TextMeshProUGUI component = textObject.GetComponent<TextMeshProUGUI>();
+            if (component == null)
+            {
+                Logger.LogWarning($"Couldn't find the {name} text component, even though gameobject was found.");
+                return;
+            }
+            string selectedText;
+            if (seedBasedRandom && StartOfRound.Instance != null)
+            {
+                System.Random rand = new(StartOfRound.Instance.randomMapSeed + seed);
+                selectedText = rand.NextItem(stringList);
+            }
+            else
+            {
+                System.Random rand = new();
+                selectedText = rand.NextItem(stringList);
+            }
+            component.text = selectedText;
+            component.fontSize = fontSize;
+        }
+
 
         internal static void Unpatch()
         {

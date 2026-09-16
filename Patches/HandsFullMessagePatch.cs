@@ -1,6 +1,5 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
-using RandomizedTexts.Extensions;
 using TMPro;
 using UnityEngine;
 
@@ -14,24 +13,7 @@ internal class HandsFullMessagePatch
     {
         if (__instance.IsOwner && HUDManager.Instance.holdingTwoHandedItem.enabled)
         {
-            GameObject handsFullTextObject = GameObject.Find("Systems/UI/Canvas/IngamePlayerHUD/HandsFullText");
-            if (handsFullTextObject != null)
-            {
-                TextMeshProUGUI component = handsFullTextObject.GetComponent<TextMeshProUGUI>();
-                string selectedText;
-                if (RandomizedTexts.seedBasedRandom)
-                {
-                    System.Random rand = new(StartOfRound.Instance.randomMapSeed + 38);
-                    selectedText = rand.NextItem(RandomizedTexts.handsFullMessages);
-                }
-                else
-                {
-                    System.Random rand = new();
-                    selectedText = rand.NextItem(RandomizedTexts.handsFullMessages);
-                }
-                component.text = selectedText;
-                component.fontSize = RandomizedTexts.handsFullFontSize;
-            }
+            RandomizedTexts.ChangeText("Systems/UI/Canvas/IngamePlayerHUD/HandsFullText", "Hands Full", RandomizedTexts.handsFullMessages, RandomizedTexts.handsFullFontSize, 38);
         }
     }
 }

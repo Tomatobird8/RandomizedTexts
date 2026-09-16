@@ -1,5 +1,5 @@
 ﻿using HarmonyLib;
-using RandomizedTexts.Extensions;
+using System.ComponentModel;
 using TMPro;
 using UnityEngine;
 
@@ -13,24 +13,7 @@ internal class CriticalInjuryPatch
     {
         if (hurtPlayer && health < 20)
         {
-            GameObject criticalInjuryTextObject = GameObject.Find("Systems/UI/Canvas/IngamePlayerHUD/SpecialHUDGraphics/CriticalInjury/TipLeft1");
-            if (criticalInjuryTextObject != null)
-            {
-                TextMeshProUGUI component = criticalInjuryTextObject.GetComponent<TextMeshProUGUI>();
-                string selectedText;
-                if (RandomizedTexts.seedBasedRandom)
-                {
-                    System.Random rand = new(StartOfRound.Instance.randomMapSeed + 75);
-                    selectedText = rand.NextItem(RandomizedTexts.criticalInjuryMessages);
-                }
-                else
-                {
-                    System.Random rand = new();
-                    selectedText = rand.NextItem(RandomizedTexts.criticalInjuryMessages);
-                }
-                component.text = selectedText;
-                component.fontSize = RandomizedTexts.criticalInjuryFontSize;
-            }
+            RandomizedTexts.ChangeText("Systems/UI/Canvas/IngamePlayerHUD/SpecialHUDGraphics/CriticalInjury/TipLeft1", "Critical Injury", RandomizedTexts.criticalInjuryMessages, RandomizedTexts.criticalInjuryFontSize, 75);
         }
     }
 }
