@@ -1,7 +1,5 @@
 ﻿using GameNetcodeStuff;
 using HarmonyLib;
-using TMPro;
-using UnityEngine;
 
 namespace RandomizedTexts.Patches;
 

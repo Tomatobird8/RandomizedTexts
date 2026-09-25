@@ -35,6 +35,8 @@ namespace RandomizedTexts
         public static List<string> loadingMessages = [];
         public static float loadingFontSize = 19.6f;
 
+        public static List<string> playerJoinMessages = [];
+
         private void Awake()
         {
             Logger = base.Logger;
@@ -57,6 +59,8 @@ namespace RandomizedTexts
             landingToMoonFontSize = Config.Bind<float>("General", "EnteringAtmosphereFontSize", 35f, "Set text font size here.").Value;
             loadingMessages = StringToList(Config.Bind<string>("General", "LoadingMessages", "", "Add texts to display here. Separate messages using the | symbol.").Value);
             loadingFontSize = Config.Bind<float>("General", "LoadingFontSize", 19.6f, "Set text font size here.").Value;
+
+            playerJoinMessages = StringToList(Config.Bind<string>("General", "PlayerJoinMessages", "", "Add texts to display here. Separate messages using the | symbol. Use &$ as a placeholder for player name.").Value);
 
             Patch();
 
@@ -81,6 +85,7 @@ namespace RandomizedTexts
             TryPatchSingle(gameOverMessages.Count > 0 || gameOverSubtitles.Count > 0, typeof(GameOverMessagePatch));
             TryPatchSingle(landingToMoonMessages.Count > 0, typeof(LoadingLevelPatch));
             TryPatchSingle(loadingMessages.Count > 0, typeof(LoadingGamePatch));
+            TryPatchSingle(playerJoinMessages.Count > 0, typeof(PlayerJoinMessagePatch));
 
             Logger.LogDebug("Finished patching!");
         }
@@ -99,19 +104,23 @@ namespace RandomizedTexts
                 Logger.LogWarning($"Couldn't find the {name} text component, even though gameobject was found.");
                 return;
             }
-            string selectedText;
+            string selectedText = SelectRandom(stringList, seed);
+            component.text = selectedText;
+            component.fontSize = fontSize;
+        }
+
+        internal static string SelectRandom(List<string> stringList, int seed)
+        {
             if (seedBasedRandom && StartOfRound.Instance != null)
             {
                 System.Random rand = new(StartOfRound.Instance.randomMapSeed + seed);
-                selectedText = rand.NextItem(stringList);
+                return rand.NextItem(stringList);
             }
             else
             {
                 System.Random rand = new();
-                selectedText = rand.NextItem(stringList);
+                return rand.NextItem(stringList);
             }
-            component.text = selectedText;
-            component.fontSize = fontSize;
         }
 
 

@@ -1,7 +1,4 @@
 ﻿using HarmonyLib;
-using UnityEngine;
-using TMPro;
-using RandomizedTexts.Extensions;
 
 namespace RandomizedTexts.Patches;
 
